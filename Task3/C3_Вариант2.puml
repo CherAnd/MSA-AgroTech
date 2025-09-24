@@ -1,6 +1,7 @@
 @startuml вариант 2, Комплекс управления животноводством
 
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
 ' === Участники ===
 Person(оператор, "Оператор", "Использует систему")
@@ -22,7 +23,12 @@ System_Boundary(платформа, "АгроПром Х - Цифровая пл
             Container(модуль_контроля, "Контроллер Овен", "CodeSys", "Связь с полевым оборудованием")
 
             Container(камеры_на_фермах, "Камеры наблюдения на фермах", "", "Видеоизображение")
-            Container(модуль_видеоаналитики, "Сервис анализа поведения животных", "C++", "Обработка видео")
+            Container_Boundary(модуль_видеоаналитики, "Сервис анализа поведения животных и подсчёта поголовья") {
+                Component(video_control_manager, "Video Control Manager", "", "")
+                Component(ML_module, "ML module")
+                ContainerDb(video_control_db, "Video Control DB")
+            }
+'            Container(модуль_видеоаналитики, "Сервис анализа поведения животных", "C++", "Обработка видео")
             Container(хранилище_видео, "Хранилище размеченных видео и фотоданных")
             Container(хранилище_сырого_видео, "Хранилище сырых видеоданных")
 
@@ -54,11 +60,13 @@ Rel(scada_historian, farm_storage, "")
 Rel(scada_core, farm_users_storage, "")
 Rel(scada_core, scada_websocket_client, "")
 Rel(управление_фермами, storage, "")
-Rel(камеры_на_фермах, модуль_видеоаналитики, "Потоковое видео")
+Rel(камеры_на_фермах, video_control_manager, "Потоковое видео")
 Rel(камеры_на_фермах, хранилище_сырого_видео, "Потоковое видео")
-Rel(хранилище_сырого_видео, модуль_видеоаналитики, "Требуемый фрагмент видео")
-Rel(модуль_видеоаналитики, scada_core, "Сигналы")
-Rel(модуль_видеоаналитики, хранилище_видео, "Обработанные данные")
+Rel(хранилище_сырого_видео, video_control_manager, "Требуемый фрагмент видео")
+Rel(video_control_manager, scada_core, "Сигналы")
+Rel(video_control_manager, video_control_db, "Сигналы")
+Rel(ML_module, video_control_manager, "События")
+Rel(ML_module, хранилище_видео, "Обработанные данные")
 
 ' Центральная Kafka
 Rel(scada_websocket_client, kafka, "Публикует данные, получает уставки", "Websockets->Kafka")
