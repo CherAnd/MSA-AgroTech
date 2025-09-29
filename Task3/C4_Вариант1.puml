@@ -1,0 +1,54 @@
+@startuml вариант 1,  Комплекс управления животноводством. Сервис контроля питания
+
+rectangle "Менеджер контроля питания" as foodControlManager{
+
+    class ApiController {
+        +GET():Json
+        +POST():Json
+    }
+
+    class computeFoodSetpoints {
+        ...
+    }
+
+    class KafkaController {
+        +sendMessage():Json
+    }
+    
+    class dbController {
+        +create()
+        +read()
+        +update()
+        +delete()
+    }
+
+    computeFoodSetpoints --> KafkaController
+    computeFoodSetpoints --> dbController
+    dbController --> ApiController 
+}
+
+rectangle "Консьюмер контроля питания" as foodControlConsumer {
+    class KafkaController {
+        +getMessage():Json
+    }
+    class dbController {
+        +create()
+        +update()
+    }
+}
+
+database "FeedControlDb" as db {
+}
+
+rectangle "Брокер сообщений" {
+    rectangle "Apache Kafka" as kafka {
+    }
+}
+foodControlManager.KafkaController --> kafka
+foodControlManager.dbController --> db
+db --> foodControlManager.dbController
+
+kafka --> foodControlConsumer.KafkaController
+foodControlConsumer.dbController --> db
+
+@enduml
