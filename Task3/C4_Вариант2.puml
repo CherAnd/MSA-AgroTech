@@ -1,0 +1,66 @@
+@startuml вариант 1,  Комплекс управления животноводством. Сервис анализа поведения животных и подсчёт поголовья
+
+rectangle "Менеджер видеоконтроля" as videoControlManager{
+
+    class RawDataController {
+        ...
+    }
+
+    class videoSearchController {
+        ...
+    }
+
+    class MLController {
+        ...
+    }
+
+    class MessageController {
+        +getMessage()
+        +sendMessage()
+    }
+
+    class dbController {
+        +create()
+        +read()
+        +update()
+        +delete()
+    }
+
+
+    RawDataController --> MLController
+    videoSearchController --> MLController
+    MessageController --> videoSearchController
+    MLController --> dbController
+    MLController --> MessageController
+}
+
+rectangle "Модуль распознавания образов" as MLModule {
+    rectangle "Сторонний компонент для анализа девиантного поведения" as MLbehaviour {
+    }
+    rectangle "Сторонний компонент для подсчёта поголовья" as MLCount{
+    }
+
+}
+
+rectangle "Хранилище размеченных фрагментов" as store {
+    rectangle "контроллер хранилища" {
+    }
+}
+
+database "VideoControlDb" as db {
+}
+
+rectangle "SCADA" {
+    rectangle "SCADA message module" as messageScada {
+    }
+}
+
+videoControlManager.MLController --> MLModule
+videoControlManager.dbController --> db
+videoControlManager.MessageController --> messageScada
+videoControlManager.MLController --> store
+
+MLModule --> videoControlManager.MLController
+messageScada --> videoControlManager.MessageController
+
+@enduml
